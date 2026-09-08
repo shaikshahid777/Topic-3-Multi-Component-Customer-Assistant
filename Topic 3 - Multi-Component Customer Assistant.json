@@ -1,0 +1,176 @@
+{
+  "name": "Topic 3 - Multi-Component Customer Assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "responseMode": "lastNode"
+        }
+      },
+      "id": "4cea4e2b-2aae-40d6-9597-14cfeba46dce",
+      "name": "Chat Trigger",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        112
+      ],
+      "webhookId": "21f6e60e-fd56-4185-bc06-0896386e7608"
+    },
+    {
+      "parameters": {
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a helpful Customer Assistant for a retail company.\n\nGuidelines:\n- Maintain conversation context using your memory. Remember details the customer shared earlier in the conversation (such as their name, order number, or previous questions) and refer back to them when relevant.\n- Whenever the customer asks anything involving arithmetic (totals, discounts, taxes, quantities, price comparisons), you MUST use the \"calculator\" tool to compute the result instead of doing the math yourself.\n- Always answer in the required structured JSON format.\n- Be concise, polite, and professional.\n\nSet \"calculation_used\" to true only when you invoked the calculator tool for that answer, otherwise false. Put the final computed value in \"result\", or an empty string when there is no calculation.",
+          "maxIterations": 5
+        }
+      },
+      "id": "789e2cdf-8a53-4add-8c63-f5eddb2ec630",
+      "name": "Customer Assistant Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        352,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "maxTokens": 1000,
+          "temperature": 0
+        }
+      },
+      "id": "d6c5c7b6-b235-46aa-b457-47fc54777182",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        336
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "Gateway credits",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "id": "027aab02-09dd-4816-b5e4-4329dd5663bc",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        352,
+        336
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "e6754cdd-ae49-4b1b-80b7-a4b8b33e71e7",
+      "name": "calculator",
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        480,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"response\": {\n      \"type\": \"string\",\n      \"description\": \"The natural-language answer for the customer\"\n    },\n    \"category\": {\n      \"type\": \"string\",\n      \"description\": \"Intent category, e.g. billing, support, sales, general\"\n    },\n    \"calculation_used\": {\n      \"type\": \"boolean\",\n      \"description\": \"Whether the calculator tool was used for this answer\"\n    },\n    \"result\": {\n      \"type\": \"string\",\n      \"description\": \"The numeric or final result, if any; empty string otherwise\"\n    }\n  },\n  \"required\": [\n    \"response\",\n    \"category\",\n    \"calculation_used\",\n    \"result\"\n  ]\n}"
+      },
+      "id": "06648231-50d7-4641-95c1-8c90d615ae26",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        608,
+        336
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "Customer Assistant Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Customer Assistant Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Customer Assistant Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "Customer Assistant Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Customer Assistant Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "13e739b3-d228-43fd-a152-d7737051c6e0",
+  "meta": {
+    "instanceId": "6abe9931809978352319cb21622ffdff38accce530bfc6c488633e9f18461d78"
+  },
+  "nodeGroups": [],
+  "id": "Du3WhBjllUrr2MT5",
+  "tags": []
+}
